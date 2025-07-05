@@ -1,0 +1,6 @@
+outs:
+- md5: ee2c2f1800fde32cdcd66d2172402ced.dir
+  size: 41794291
+  nfiles: 600
+  hash: md5
+  path: Data
