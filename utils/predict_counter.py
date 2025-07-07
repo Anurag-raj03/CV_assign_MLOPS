@@ -1,7 +1,7 @@
 import json
 import os
 COUNTER_PATH = "utils/prediction_counter.json"
-THRESHOLD = 1 
+THRESHOLD = 3 
 def increment_and_check():
     if not os.path.exists(COUNTER_PATH):
         with open(COUNTER_PATH, "w") as f:

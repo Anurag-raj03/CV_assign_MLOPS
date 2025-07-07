@@ -1,0 +1,49 @@
+name: RPS MLOps CI Pipeline 🚀
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  Continuous-Integration:
+    name: Continuous Integration Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_USERNAME }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker Images
+        run: docker compose build
+
+      - name: Tag Docker Images
+        run: |
+          docker tag anuragraj03/rock_paper_scissors/custom-airflow:latest anuragraj03/rock_paper_scissors:custom-airflow
+          docker tag anuragraj03/rock_paper_scissors/backend_process:latest anuragraj03/rock_paper_scissors:backend_process
+          docker tag anuragraj03/rock_paper_scissors/frontend_run:latest anuragraj03/rock_paper_scissors:frontend_run
+          docker tag anuragraj03/rock_paper_scissors/src_run:latest anuragraj03/rock_paper_scissors:src_run
+
+      - name: Push Docker Images
+        run: |
+          docker push anuragraj03/rock_paper_scissors:custom-airflow
+          docker push anuragraj03/rock_paper_scissors:backend_process
+          docker push anuragraj03/rock_paper_scissors:frontend_run
+          docker push anuragraj03/rock_paper_scissors:src_run

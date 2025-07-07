@@ -7,7 +7,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     
     try:
-        logging.info("Starting ML pipeline for Bank Marketing Project...")
+        logging.info("Starting ML pipeline for COMPUTER VISION PROJECTS...")
         
         train_and_log_model()
 
