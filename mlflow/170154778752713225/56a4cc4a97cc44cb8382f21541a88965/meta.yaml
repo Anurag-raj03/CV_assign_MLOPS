@@ -1,0 +1,14 @@
+artifact_uri: /mlflow/170154778752713225/56a4cc4a97cc44cb8382f21541a88965/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '170154778752713225'
+lifecycle_stage: active
+run_id: 56a4cc4a97cc44cb8382f21541a88965
+run_name: rare-mouse-764
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751722690536
+status: 1
+tags: []
+user_id: root

@@ -1,26 +1,22 @@
+#!/bin/bash
+
 set -e
-set -o pipefail
 
-echo "[DVC] Setting up DVC..."
 
-if [ ! -d ".dvc" ]; then
-    echo "Initializing DVC without SCM..."
-    dvc init --no-scm
-fi
 
-if [ ! -f "Data.dvc" ]; then
-    echo " Adding Data_kind_stack to DVC..."
-    dvc add Data
-    dvc commit -m "Added Data"
-else
-    echo "Data already tracked by DVC"
-fi
+echo "Configuring DVC remote..."
+dvc remote modify --local myremote access_key_id $AWS_ACCESS_KEY_ID
+dvc remote modify --local myremote secret_access_key $AWS_SECRET_ACCESS_KEY
+dvc remote modify --local myremote region $AWS_DEFAULT_REGION
 
-echo "Initializing Database & Tables..."
+echo "Running DVC push..."
+dvc push
+
+echo "Initializing database..."
 python Database_connection/db_tb.py
 
-echo "Inserting Dummy Data..."
+echo "Inserting dummy data..."
 python Database_connection/testing_record_airflow.py
 
-echo "Launching the app..."
+echo "Starting backend API..."
 uvicorn main:app --host 0.0.0.0 --port 8000

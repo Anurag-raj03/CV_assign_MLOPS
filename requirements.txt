@@ -1,4 +1,4 @@
-tensorflow==2.13.0
+tensorflow-cpu==2.13.0
 keras==2.13.1
 mlflow==2.4.1
 scikit-learn==1.4.0
@@ -6,11 +6,10 @@ joblib
 pandas
 SQLAlchemy
 dill==0.3.8
-dvc
 apache-airflow==2.7.0
 fastapi
 uvicorn
-psycopg2==2.9.10
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.10
 prometheus_fastapi_instrumentator
 opencv-python
+dvc[s3]==3.50.1

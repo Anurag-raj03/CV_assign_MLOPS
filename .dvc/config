@@ -1,0 +1,11 @@
+[core]
+    remote = myremote
+['remote "mygdrive"']
+    url = gdrive://12RexP5-5yaqDploq3y8xmW3Vaz8OqNaR
+    gdrive_use_service_account = true
+    gdrive_service_account_json_file_path = ../gdrive-service-account.json
+['remote "mygdrive2"']
+    url = gdrive://12RexP5-5yaqDploq3y8xmW3Vaz8OqNaR
+['remote "myremote"']
+    url = s3://anurag-dvc-eu-data
+    region = eu-north-1

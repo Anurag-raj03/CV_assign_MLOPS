@@ -1,24 +1,87 @@
-FROM python:3.10.12
+FROM python:3.10.12-slim
 
 WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+# Install required system dependencies (NO dvc here)
 RUN apt-get update && apt-get install -y \
+    git \
     netcat-openbsd \
     dos2unix \
+    gcc \
+    libffi-dev \
+    libssl-dev \
+    libglib2.0-0 \
+    libsm6 \
+    libxrender1 \
+    libxext6 \
     && apt-get clean
 
-COPY requirements.txt .
+# Install dvc and other Python packages via pip
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir dvc[s3]
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy codebase
+COPY main.py ./main.py
+COPY backend_c.sh ./backend_c.sh
+COPY Dockerfile.backend ./
 
-
-COPY . /app/
+COPY Data/ ./Data/
+COPY inference/ ./inference/
+COPY utils/ ./utils/
+COPY Database_connection/ ./Database_connection/
 
 RUN dos2unix backend_c.sh && chmod +x backend_c.sh
 
 EXPOSE 8000
 
+ENTRYPOINT ["bash", "backend_c.sh"]
+FROM python:3.10.12-slim
+
+WORKDIR /app
+
+# Prevent .pyc files and enable better logging
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Install required system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    gcc \
+    libffi-dev \
+    libssl-dev \
+    netcat-openbsd \
+    dos2unix \
+    libglib2.0-0 \
+    libsm6 \
+    libxrender1 \
+    libxext6 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install DVC with S3 support and project dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir dvc[s3]
+
+# Copy your full codebase
+COPY main.py ./main.py
+COPY backend_c.sh ./backend_c.sh
+COPY Dockerfile.backend ./
+
+COPY Data/ ./Data/
+COPY inference/ ./inference/
+COPY utils/ ./utils/
+COPY Database_connection/ ./Database_connection/
+
+# Make the entrypoint script executable
+RUN dos2unix backend_c.sh && chmod +x backend_c.sh
+
+# Expose the backend port
+EXPOSE 8000
+
+# Run backend command via script (this includes dvc push + uvicorn)
 ENTRYPOINT ["bash", "backend_c.sh"]

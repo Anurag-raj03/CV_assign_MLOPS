@@ -1,1 +1,4 @@
 /Data
+/airflow/logs
+/.env
+/artifacts

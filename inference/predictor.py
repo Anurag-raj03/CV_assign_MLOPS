@@ -3,14 +3,13 @@ from keras.preprocessing import image
 import numpy as np
 
 CLASS_MAP = {
-    0: "rock",
-    1: "paper",
+    1: "rock",
+    0: "paper",
     2: "scissors"
 }
 
 def load_model(path: str):
     model = keras_load(path)
-    print("[Model Loaded] Mobilenet RPS Model")
     return model
 
 def predict_label(image_path: str, model):

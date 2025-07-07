@@ -1,0 +1,14 @@
+artifact_uri: /mlflow/170154778752713225/358a59a7fc234dab97fa2e95c8f54fac/artifacts
+end_time: 1751721428107
+entry_point_name: ''
+experiment_id: '170154778752713225'
+lifecycle_stage: active
+run_id: 358a59a7fc234dab97fa2e95c8f54fac
+run_name: adaptable-skink-16
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751721093099
+status: 4
+tags: []
+user_id: root

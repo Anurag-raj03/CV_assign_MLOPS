@@ -38,10 +38,10 @@ def preprocess_and_save_images(input_dir: str, output_dir: str, target_size=(224
 
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-            if is_blurr(image, threshold=blur_threshold):
-                print(f"[Skip] Blurry image detected: {img_name}")
-                skipped_blur += 1
-                continue
+            # if is_blurr(image, threshold=blur_threshold):
+            #     print(f"[Skip] Blurry image detected: {img_name}")
+            #     skipped_blur += 1
+            #     continue
 
             image = cv2.resize(image, target_size)
             image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)

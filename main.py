@@ -1,15 +1,17 @@
-from fastapi import FastAPI, UploadFile, Form, HTTPException, BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, UploadFile, HTTPException, BackgroundTasks
 from prometheus_fastapi_instrumentator import Instrumentator
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from inference.predictor import load_model, predict_label
-from Database_connection.db_init import insert_image_record, clear_temp_table
-from utils.airflow_trigger import trigger_airflow_dag
 import tempfile
 import shutil
-import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from inference.predictor import load_model, predict_label
+from Database_connection.db_init import insert_image_record
+from utils.airflow_trigger import trigger_airflow_dag
+from utils.predict_counter import increment_and_check
+
 
 app = FastAPI(title="Rock Paper Scissors FastAPI Service")
 Instrumentator().instrument(app).expose(app)
@@ -21,7 +23,7 @@ TEMP_TABLE = "temp_image_data"
 model = load_model(MODEL_PATH)
 
 @app.post("/predict/")
-async def capture_and_predict(image: UploadFile):
+async def capture_and_predict(image: UploadFile, background_tasks: BackgroundTasks):
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
             shutil.copyfileobj(image.file, tmp)
@@ -33,17 +35,11 @@ async def capture_and_predict(image: UploadFile):
         insert_image_record(DB_NAME, TEMP_TABLE, img_path, label)
 
         os.remove(img_path)
+        if increment_and_check():
+            background_tasks.add_task(trigger_airflow_dag)
 
         return {"prediction": label}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/finish/")
-def stop_camera_and_trigger(background_tasks: BackgroundTasks):
-    try:
-        background_tasks.add_task(trigger_airflow_dag)
-        
-        return {"message": "Camera stopped. DAG triggered & temp table cleared."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
