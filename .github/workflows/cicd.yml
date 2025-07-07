@@ -22,6 +22,18 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install DVC with S3 Support
+        run: pip install dvc[s3]
+
+      - name: Configure DVC Remote for S3
+        run: |
+          dvc remote modify --local myremote access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          dvc remote modify --local myremote secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          dvc remote modify --local myremote region ${{ secrets.AWS_DEFAULT_REGION }}
+
+      - name: Pull DVC Data from S3
+        run: dvc pull
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
