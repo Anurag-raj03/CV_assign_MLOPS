@@ -183,7 +183,7 @@ This system follows **best practices in modern MLOps**, with:
 ```mermaid
 flowchart TD
     subgraph UserInteraction
-        A[📸 Streamlit UI] --> B[🚀 Backend API (FastAPI)]
+        A[📸 Streamlit UI] --> B[🚀 Backend FastAPI]
         B --> C[🧠 Model Prediction]
         B --> Counter[📊 Prediction Counter]
         Counter -->|>= 3| Airflow[🛠️ Airflow DAG Triggered]
@@ -194,14 +194,14 @@ flowchart TD
         Airflow --> Step1[📤 Extract from PostgreSQL]
         Step1 --> Step2[🧼 Preprocess Images]
         Step2 --> DVC_Script[📦 Run dvc_script.sh → Push to S3 via DVC]
-        DVC_Script --> DVC[S3 Bucket (via DVC)]
+        DVC_Script --> DVC[S3 Bucket via DVC]
         Step2 --> Step3[🤖 Retrain MobileNet Model]
-        Step3 --> MLflow[🧾 Log to MLflow (metrics + artifacts)]
+        Step3 --> MLflow[🧾 Log to MLflow metrics + artifacts]
         Step3 --> Artifacts[📁 Save model to artifacts/]
     end
 
     subgraph Training
-        Data --> src[⚙️ Training Scripts (src/)]
+        Data --> src[⚙️ Training Scripts src_floder📂]
         src --> Artifacts
         Artifacts --> Backend[♻️ Backend Reloads Updated Model]
     end
