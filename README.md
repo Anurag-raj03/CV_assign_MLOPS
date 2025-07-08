@@ -178,6 +178,37 @@ This system follows **best practices in modern MLOps**, with:
 
 ---
 
+## 🧱 Component & Interaction Overview
+
+```mermaid
+flowchart TD
+    subgraph UserInteraction
+        A[📸 Streamlit UI] --> B[🚀 Backend API (FastAPI)]
+        B --> C[🧠 Model Prediction]
+        B --> Counter[📊 Prediction Counter]
+        Counter -->|>= 3| Airflow[🛠️ Airflow DAG Triggered]
+    end
+
+    subgraph AirflowPipeline
+        Airflow --> Step1[📤 Extract from PostgreSQL]
+        Step1 --> Step2[🧼 Preprocess Images]
+        Step2 --> DVC_Script[📦 Run dvc_script.sh (Push data to S3)]
+        DVC_Script --> DVC[S3 Bucket via DVC]
+        Step2 --> Step3[🤖 Retrain MobileNet Model]
+        Step3 --> MLflow[🧾 Log to MLflow (metrics, artifacts)]
+        Step3 --> Artifacts[📁 Save model to artifacts/]
+    end
+
+    subgraph Training
+        Data[📂 Data Folder] --> src[⚙️ Training Scripts (src/)]
+        src --> Artifacts
+        Artifacts --> Backend[♻️ Backend Reloads Model]
+    end
+```
+
+
+---
+
 ## 👨‍💻 Connect With Me
 
 * 💼 [LinkedIn](https://www.linkedin.com/in/anurag-raj-770b6524a/)
