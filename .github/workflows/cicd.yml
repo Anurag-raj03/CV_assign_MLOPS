@@ -82,11 +82,6 @@ jobs:
           name: deploy-compose-file
           path: .
 
-      - name: Download .env file
-        uses: actions/download-artifact@v4
-        with:
-          name: env-file
-          path: .
 
       - name: Download artifacts folder
         uses: actions/download-artifact@v4
