@@ -1,3 +1,5 @@
+---
+
 # 🧠📸 Rock-Paper-Scissors: Real-Time MLOps Pipeline with OpenCV, Airflow & Transfer Learning
 
 Welcome to the **Rock-Paper-Scissors (RPS) MLOps System** — a cutting-edge, production-ready MLOps pipeline designed to process, predict, retrain, and redeploy machine learning models in real time. This solution brings together best-in-class tools like **OpenCV**, **MobileNet**, **Airflow**, **DVC**, **S3**, **Docker**, **Streamlit**, **PostgreSQL**, **Prometheus**, **Grafana**, and **CI/CD via GitHub Actions & EC2**.
@@ -9,12 +11,12 @@ Welcome to the **Rock-Paper-Scissors (RPS) MLOps System** — a cutting-edge, pr
 * 🧠 **Transfer Learning** with MobileNet for accurate RPS image classification
 * 🎥 **Real-Time Inference** using OpenCV via live webcam
 * 🔁 **Auto-Retrain Trigger** when prediction count exceeds threshold using Airflow
-* ☁️ **DVC + S3** for robust dataset and model versioning
+* ☁️ **DVC + S3** for robust **data versioning**
+* 📦 **MLflow** for **model versioning**, **metrics logging**, and **artifact tracking**
 * 🐳 **Containerized Microservices** using Docker Compose
 * 🔐 **CI/CD** pipeline via GitHub Actions and EC2 integration
 * 📊 **Prometheus + Grafana** for full-stack monitoring
 * 🗃️ **PostgreSQL** for storing labeled image metadata
-* 📦 **MLflow** for experiment tracking and model logging
 
 ---
 
@@ -25,6 +27,8 @@ Welcome to the **Rock-Paper-Scissors (RPS) MLOps System** — a cutting-edge, pr
 ├── .dvc/                          # DVC configuration and cache for data tracking
 ├── .github/workflows/            # CI/CD pipeline config (cicd.yml)
 ├── airflow/                      # Airflow DAG for retraining logic
+│   └── scripts/
+│       └── dvc_script.sh         # Script to push preprocessed data to S3 via DVC
 ├── artifacts/                    # Saved models, metrics, and intermediate outputs
 ├── Data/                         # Raw image data versioned via DVC
 ├── Database_connection/          # PostgreSQL init and mock data scripts
@@ -58,23 +62,30 @@ flowchart TD
     E -- Yes --> G[Airflow DAG triggered]
     G --> H[Extract images from PostgreSQL]
     H --> I[Preprocess using OpenCV]
-    I --> J[Retrain using MobileNet]
-    J --> K[Log model to MLflow]
-    K --> L[Save to artifacts/ and DVC push to S3]
-    L --> M[Restart backend with new model]
-    M --> N[Serve updated predictions]
+    I --> J[dvc_script.sh → DVC Push to S3]
+    J --> K[Retrain using MobileNet]
+    K --> L[Log model to MLflow]
+    L --> M[Save to artifacts/]
+    M --> N[Restart backend with new model]
+    N --> O[Serve updated predictions]
 ```
 
 ---
 
 ## 🛠️ Airflow DAG - `rock_paper_scissors_retrain_pipeline`
 
-* **Trigger**: Image prediction count ≥ 3
-* **Steps**:
+**Trigger Condition**: Prediction count ≥ 3 (tracked in backend)
+**Steps:**
 
-  1. 📤 `extract_images_from_postgres`: Fetch labeled data from PostgreSQL
-  2. 🧼 `preprocess_images`: Resize, normalize, and augment images
-  3. 🤖 `retrain_rps_model`: Train using MobileNet, log metrics in MLflow, save model to artifacts
+1. 📤 `extract_images_from_postgres`: Pulls labeled image data from PostgreSQL
+2. 🧼 `preprocess_images`: Applies resizing, normalization, and augmentation
+3. 🧾 `dvc_script.sh`:
+
+   * Path: `airflow/scripts/dvc_script.sh`
+   * Role: **Pushes preprocessed dataset to remote DVC storage (S3)** for version control
+4. 🤖 `retrain_rps_model`: Fine-tunes MobileNet, logs experiments to MLflow
+5. 📦 `MLflow Tracking`: Stores trained model, accuracy, loss, and other artifacts
+6. 🔁 Updated model is pulled and served by backend
 
 ---
 
@@ -90,25 +101,38 @@ flowchart TD
 | Grafana     | 3000 | Visualization of metrics                   |
 | MLflow      | 5000 | Model tracking interface                   |
 
-🚨 **Note:** Only port `8501` (Streamlit frontend) is exposed to the public EC2 instance for security.
+🚨 **Note:** Only port `8501` (Streamlit frontend) is publicly exposed via EC2 for security.
 
 ---
 
-## 📦 DVC for Data & Model Versioning
+## 📦 DVC for **Data Versioning** Only
 
-* **Remote:** `s3://anurag-dvc-eu-data`
-* **Tracked:**
+* **Remote Storage:** `s3://anurag-dvc-eu-data`
+* **Tracked Items:**
 
-  * 📂 Raw images
-  * 🧼 Preprocessed data
-  * 🧠 Trained models (MobileNet checkpoints)
+  * 📂 Raw and preprocessed image data
+  * 📁 Cleaned image-label metadata
+  * 📈 Training inputs for reproducibility
+
+🧾 `airflow/scripts/dvc_script.sh` automates this process after preprocessing:
 
 ```bash
-dvc remote modify --local myremote access_key_id $AWS_ACCESS_KEY_ID
-dvc remote modify --local myremote secret_access_key $AWS_SECRET_ACCESS_KEY
-dvc remote modify --local myremote region $AWS_DEFAULT_REGION
+#!/bin/bash
+dvc add Data/processed/
 dvc push
 ```
+
+---
+
+## 📘 MLflow for **Model Versioning** & Experiment Tracking
+
+* Logs:
+
+  * 🧠 Model version & weights
+  * 📉 Accuracy, loss, precision, recall
+  * 📁 Artifacts (model.pkl, training logs, plots)
+* Access via: `http://localhost:5000`
+* Full experiment reproducibility
 
 ---
 
@@ -117,54 +141,40 @@ dvc push
 📊 Visualized metrics:
 
 * Request duration
-* Model latency
-* Prediction count
+* Prediction latency
+* Model version in use
 * CPU/Memory usage
-* Endpoint hits (`/predict`, `/metrics`)
+* Endpoint hits (`/predict`, `/metrics`, `/upload`)
 
 ---
 
 ## 🔐 CI/CD with GitHub Actions & EC2
 
 * **Trigger:** Push to `main` branch
-* **Workflow:**
+* **Pipeline Includes:**
 
-  * Setup Python & DVC
-  * Pull data from S3 via DVC
-  * Build + Push Docker Images to DockerHub
-  * SCP deploy file to EC2
-  * SSH into EC2 and restart Docker Compose stack
+  * ✅ Set up Python, DVC, Docker
+  * 📦 Pull dataset from S3 (via DVC)
+  * 🐳 Build and push Docker images to DockerHub
+  * 📤 Deploy updated stack to EC2 using SSH + Docker Compose
 
 ---
 
-## 🧱 Component & Interaction Overview
+## 🧱 Production-Ready MLOps Architecture
 
-```mermaid
-flowchart TD
-    subgraph UserInteraction
-        A[User Streamlit] --> B[Backend API]
-        B --> C[Prediction]
-        B --> DVCTrigger[DVC push on backend start]
-        DVCTrigger --> DVC[S3 via DVC]
-        B --> Counter[Update Counter]
-        Counter -->|>= 3| Airflow
-    end
+This system follows **best practices in modern MLOps**, with:
 
-    subgraph AirflowPipeline
-        Airflow --> Step1[Extract from PostgreSQL]
-        Step1 --> Step2[Preprocess]
-        Step2 --> Step3[Retrain MobileNet]
-        Step3 --> MLflow
-        Step3 --> Artifacts
-        Artifacts --> DVC[S3 via DVC]
-    end
-
-    subgraph Training
-        Data --> src
-        src --> Artifacts
-        Artifacts --> Backend
-    end
-```
+| MLOps Phase        | Tool/Service Used                 |
+| ------------------ | --------------------------------- |
+| Inference          | OpenCV + FastAPI + Streamlit      |
+| Monitoring         | Prometheus + Grafana              |
+| Data Versioning    | DVC + S3                          |
+| Model Versioning   | MLflow                            |
+| Orchestration      | Airflow                           |
+| Experiment Logging | MLflow                            |
+| Continuous Deploy  | GitHub Actions + EC2 + Docker     |
+| Microservices      | Docker Compose                    |
+| CI/CD Secrets      | `.env` + GitHub Secrets + EC2 SSH |
 
 ---
 
@@ -180,12 +190,16 @@ flowchart TD
 
 ## 📌 Summary
 
-> This project showcases a scalable, real-world, **end-to-end MLOps system** with:
+> This project demonstrates a **scalable, production-grade MLOps pipeline** by integrating the **complete lifecycle of a deep learning model**, including:
 
-* 🧠 Deep Learning model lifecycle automation
-* 🔁 Auto-retraining from live usage
-* ☁️ DVC + S3 version-controlled datasets
-* 🐳 Dockerized microservices
-* 📡 Prometheus + Grafana for full observability
-* 🚀 Secure CI/CD deployment with only exposed to the world
+✅ Real-time prediction
+✅ Automated data and model versioning
+✅ Scheduled and conditional retraining
+✅ Dockerized, modular architecture
+✅ Full observability via Prometheus + Grafana
+✅ Reliable CI/CD with minimal human intervention
+✅ Streamlit-based UI with FastAPI-powered backend
+
+⚙️ *It’s not just a project — it’s a blueprint for building real-world, deployable MLOps systems.*
+
 
