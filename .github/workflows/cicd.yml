@@ -112,7 +112,6 @@ jobs:
             echo "Pulling latest images from DockerHub..."
             sudo docker pull anuragraj03/rock_paper_scissors:backend_process
             sudo docker pull anuragraj03/rock_paper_scissors:frontend_run
-            sudo docker pull anuragraj03/rock_paper_scissors:src_run
             sudo docker pull anuragraj03/rock_paper_scissors:custom-airflow
 
             echo "Deploying services..."
