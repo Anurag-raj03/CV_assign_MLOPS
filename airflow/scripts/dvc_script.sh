@@ -5,3 +5,4 @@ dvc remote modify --local myremote region $AWS_DEFAULT_REGION
 
 echo "Running DVC push..."
 dvc push
+echo "Pushing to S3 Bucket successful"
