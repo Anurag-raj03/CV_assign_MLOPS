@@ -45,7 +45,7 @@ jobs:
           echo "Cleaning Docker cache before build..."
           docker system prune -af || true
           docker volume prune -f || true
-          df -h
+          
 
       - name: Build and Push Docker Images
         run: |
