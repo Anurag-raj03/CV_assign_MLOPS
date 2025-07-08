@@ -13,11 +13,11 @@ services:
       dockerfile: Dockerfile.backend
     image: anuragraj03/rock_paper_scissors:backend_process
 
-  # src:
-  #   build:
-  #     context: ./src
-  #     dockerfile: Dockerfile.src
-  #   image: anuragraj03/rock_paper_scissors:src_run
+  src:
+    build:
+      context: ./src
+      dockerfile: Dockerfile.src
+    image: anuragraj03/rock_paper_scissors:src_run
 
   frontend:
     build:

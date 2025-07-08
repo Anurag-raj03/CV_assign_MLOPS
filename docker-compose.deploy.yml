@@ -84,8 +84,8 @@ services:
     networks:
       - rock_paper_scissors_network
     depends_on:
-      # src:
-      #   condition: service_started
+      src:
+        condition: service_started
       postgres:
         condition: service_healthy
 
@@ -131,18 +131,18 @@ services:
     networks:
       - rock_paper_scissors_network
 
-  # src:
-  #   container_name: src
-  #   image: anuragraj03/rock_paper_scissors/src_run:latest
-  #   volumes:
-  #     - ./src:/app/src
-  #     - ./Data:/app/Data
-  #     - ./artifacts:/app/artifacts
-  #   depends_on:
-  #     - mlflow
-  #   restart: on-failure
-  #   networks:
-  #     - rock_paper_scissors_network
+  src:
+    container_name: src
+    image: anuragraj03/rock_paper_scissors/src_run:latest
+    volumes:
+      - ./src:/app/src
+      - ./Data:/app/Data
+      - ./artifacts:/app/artifacts
+    depends_on:
+      - mlflow
+    restart: on-failure
+    networks:
+      - rock_paper_scissors_network
 
   mlflow:
     container_name: mlflow
