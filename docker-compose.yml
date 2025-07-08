@@ -26,12 +26,17 @@ services:
     build: 
       context: ./airflow
       dockerfile: Dockerfile.airflow
-    image: anuragraj03/rock_paper_scissors/custom-airflow:latest   
+    image: anuragraj03/rock_paper_scissors/custom-airflow:latest 
+    env_file:
+      - .env    
     environment:
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__CORE__FERNET_KEY: uC1T-Hr2kGtB-E2kwM3rHbGZJWwCQ4fbJ_LzYf8cEjQ=
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:admin@postgres:5432/mlops_image_db
       _PIP_ADDITIONAL_REQUIREMENTS: apache-airflow-providers-docker
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
       DATABASE_URL: postgresql://postgres:admin@postgres:5432/mlops_image_db
     ports:
       - "8080:8080"
@@ -46,7 +51,10 @@ services:
       - ./src:/opt/airflow/src
       - ./Database_connection:/opt/airflow/Database_connection
       - ./Data:/opt/airflow/Data
+      - ./Data.dvc:/opt/airflow/Data.dvc
+      - ./.git:/opt/airflow/.git
       - ./monitoring:/opt/airflow/monitoring
+      - ./.dvc:/opt/airflow/.dvc
       - ./artifacts:/opt/airflow/artifacts
     command: bash air.sh
     restart: on-failure
@@ -121,7 +129,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml 
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml 
     networks:
       - rock_paper_scissors_network
 

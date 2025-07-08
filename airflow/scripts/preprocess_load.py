@@ -1,9 +1,12 @@
 from airflow.decorators import task
+
 @task
 def preprocess_and_save_images(input_dir: str, output_dir: str, target_size=(224, 224), blur_threshold: float = 50.0):
     import cv2
     import os
     import sys
+    import subprocess
+
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     from src.preprocessing.blur_detect import is_blurr
     expected_labels = ['rock', 'paper', 'scissors']
@@ -51,3 +54,10 @@ def preprocess_and_save_images(input_dir: str, output_dir: str, target_size=(224
         print(f"[{label.upper()}] Saved: {saved_count}, Blurry Skipped: {skipped_blur}")
 
     print("Image preprocessing completed successfully.")
+
+    try:
+        script_path = "/opt/airflow/scripts/dvc_script.sh"
+        subprocess.run(['bash', script_path], check=True)
+        print("DVC push completed successfully.")
+    except subprocess.CalledProcessError as e:
+        print("Error occurred while running DVC script:", e)
