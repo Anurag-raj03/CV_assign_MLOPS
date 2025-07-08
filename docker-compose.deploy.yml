@@ -23,7 +23,7 @@ services:
 
   airflow:
     container_name: airflow
-    image: anuragraj03/rock_paper_scissors/custom-airflow
+    image: anuragraj03/rock_paper_scissors:custom-airflow
     environment:
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__CORE__FERNET_KEY: uC1T-Hr2kGtB-E2kwM3rHbGZJWwCQ4fbJ_LzYf8cEjQ=
@@ -57,7 +57,7 @@ services:
 
   backend:
     container_name: backend
-    image: anuragraj03/rock_paper_scissors/backend_process
+    image: anuragraj03/rock_paper_scissors:backend_process
     ports:
       - "8000:8000"
     volumes:
@@ -91,7 +91,7 @@ services:
 
   frontend:
     container_name: frontend
-    image: anuragraj03/rock_paper_scissors/frontend_run
+    image: anuragraj03/rock_paper_scissors:frontend_run
     ports:
       - "8501:8501"
     volumes:
@@ -133,7 +133,7 @@ services:
 
   src:
     container_name: src
-    image: anuragraj03/rock_paper_scissors/src_run
+    image: anuragraj03/rock_paper_scissors:src_run
     volumes:
       - ./src:/app/src
       - ./Data:/app/Data
