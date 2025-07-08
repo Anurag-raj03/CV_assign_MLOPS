@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  airflow:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile.airflow
+    image: anuragraj03/rock_paper_scissors:custom-airflow
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: anuragraj03/rock_paper_scissors:backend_process
+
+  src:
+    build:
+      context: ./src
+      dockerfile: Dockerfile.src
+    image: anuragraj03/rock_paper_scissors:src_run
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    image: anuragraj03/rock_paper_scissors:frontend_run

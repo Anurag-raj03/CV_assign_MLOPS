@@ -2,7 +2,7 @@ set -e
 trap 'echo "Error occurred! Exiting..."' ERR
 
 
-echo "🛠️ Initializing Airflow Database..."
+echo "Initializing Airflow Database..."
 airflow db init
 echo "Airflow Database Initialized."
 

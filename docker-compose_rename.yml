@@ -1,0 +1,165 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: postgres
+    restart: on-failure
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: mlops_image_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rock_paper_scissors_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  airflow:
+    container_name: airflow
+    image: anuragraj03/rock_paper_scissors/custom-airflow:latest
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__FERNET_KEY: uC1T-Hr2kGtB-E2kwM3rHbGZJWwCQ4fbJ_LzYf8cEjQ=
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:admin@postgres:5432/mlops_image_db
+      _PIP_ADDITIONAL_REQUIREMENTS: apache-airflow-providers-docker
+      DATABASE_URL: postgresql://postgres:admin@postgres:5432/mlops_image_db
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/scripts:/opt/airflow/scripts
+      - ./airflow/airflow.cfg:/opt/airflow/airflow.cfg
+      - ./main.py:/opt/airflow/main.py
+      - ./utils:/opt/airflow/utils
+      - ./inference:/opt/airflow/inference
+      - ./src:/opt/airflow/src
+      - ./Database_connection:/opt/airflow/Database_connection
+      - ./Data:/opt/airflow/Data
+      - ./monitoring:/opt/airflow/monitoring
+      - ./artifacts:/opt/airflow/artifacts
+    command: bash air.sh
+    restart: on-failure
+    networks:
+      - rock_paper_scissors_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_started
+
+  backend:
+    container_name: backend
+    image: anuragraj03/rock_paper_scissors/backend_process:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./main.py:/app/main.py
+      - ./utils:/app/utils
+      - ./inference:/app/inference
+      - ./Database_connection:/app/Database_connection
+      - ./src:/app/src
+      - ./.dvc:/app/.dvc
+      - ./monitoring:/app/monitoring
+      - ./artifacts:/app/artifacts
+      - ./Data:/app/Data
+      - ./Data.dvc:/app/Data.dvc
+      - ./.git:/app/.git
+      - ./prediction_counter.json:/app/prediction_counter.json
+    env_file:
+      - .env
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - DATABASE_URL=postgresql://postgres:admin@postgres:5432/mlops_image_db
+    restart: on-failure
+    networks:
+      - rock_paper_scissors_network
+    depends_on:
+      src:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    container_name: frontend
+    image: anuragraj03/rock_paper_scissors/frontend_run:latest
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./frontend:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    devices:
+      - "/dev/video0:/dev/video0"
+    privileged: true
+    restart: on-failure
+    networks:
+      - rock_paper_scissors_network
+    depends_on:
+      - backend
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - rock_paper_scissors_network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards.yml
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - rock_paper_scissors_network
+
+  src:
+    container_name: src
+    image: anuragraj03/rock_paper_scissors/src_run:latest
+    volumes:
+      - ./src:/app/src
+      - ./Data:/app/Data
+      - ./artifacts:/app/artifacts
+    restart: on-failure
+    depends_on:
+      - mlflow
+    networks:
+      - rock_paper_scissors_network
+
+  mlflow:
+    container_name: mlflow
+    image: ghcr.io/mlflow/mlflow:latest
+    command: mlflow server --host 0.0.0.0 --port 5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlflow:/mlflow
+    restart: on-failure
+    networks:
+      - rock_paper_scissors_network
+
+volumes:
+  postgres_data:
+  mlruns:
+
+networks:
+  rock_paper_scissors_network:
+    driver: bridge

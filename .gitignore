@@ -2,3 +2,5 @@
 /airflow/logs
 /.env
 /artifacts
+__pycache__/
+*.py[cod]
