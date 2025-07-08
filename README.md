@@ -190,19 +190,20 @@ flowchart TD
     end
 
     subgraph AirflowPipeline
+        Data[📂 Data Folder] --> Airflow[📡 Airflow DAG]
         Airflow --> Step1[📤 Extract from PostgreSQL]
         Step1 --> Step2[🧼 Preprocess Images]
-        Step2 --> DVC_Script[📦 Run dvc_script.sh (Push data to S3)]
-        DVC_Script --> DVC[S3 Bucket via DVC]
+        Step2 --> DVC_Script[📦 Run dvc_script.sh → Push to S3 via DVC]
+        DVC_Script --> DVC[S3 Bucket (via DVC)]
         Step2 --> Step3[🤖 Retrain MobileNet Model]
-        Step3 --> MLflow[🧾 Log to MLflow (metrics, artifacts)]
+        Step3 --> MLflow[🧾 Log to MLflow (metrics + artifacts)]
         Step3 --> Artifacts[📁 Save model to artifacts/]
     end
 
     subgraph Training
-        Data[📂 Data Folder] --> src[⚙️ Training Scripts (src/)]
+        Data --> src[⚙️ Training Scripts (src/)]
         src --> Artifacts
-        Artifacts --> Backend[♻️ Backend Reloads Model]
+        Artifacts --> Backend[♻️ Backend Reloads Updated Model]
     end
 ```
 
