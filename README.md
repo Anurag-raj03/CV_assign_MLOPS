@@ -118,7 +118,6 @@ flowchart TD
 
 ```bash
 #!/bin/bash
-dvc add Data/processed/
 dvc push
 ```
 
